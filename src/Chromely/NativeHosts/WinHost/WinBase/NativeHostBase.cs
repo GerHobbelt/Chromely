@@ -51,6 +51,7 @@ namespace Chromely.NativeHost
 
         public event EventHandler<CreatedEventArgs> HostCreated;
         public event EventHandler<MovingEventArgs> HostMoving;
+        public event EventHandler<MovedEventArgs> HostMoved;
         public event EventHandler<SizeChangedEventArgs> HostSizeChanged;
         public event EventHandler<CloseEventArgs> HostClose;
 
@@ -155,6 +156,11 @@ namespace Chromely.NativeHost
         public virtual Size GetWindowClientSize()
         {
             return GetClientSize();
+        }
+
+        public virtual Rectangle GetWindowClientBounds()
+        {
+            return WindowHelper.GetWindowBounds(_handle);
         }
 
         public virtual float GetWindowDpiScale()
@@ -347,12 +353,6 @@ namespace Chromely.NativeHost
             }
         }
 
-        protected virtual void OnSizeChanged(int width, int height)
-        {
-            var handler = HostSizeChanged;
-            handler?.Invoke(width, new SizeChangedEventArgs(width, height));
-        }
-
         #endregion Create Window Protected
 
         #region Create Window Private
@@ -534,17 +534,26 @@ namespace Chromely.NativeHost
                     break;
 
                 case WM.MOVING:
-                case WM.MOVE:
-                    {
+                     {
                         HostMoving?.Invoke(this, new MovingEventArgs());
                         return IntPtr.Zero;
                     }
+               case WM.MOVE:
+                    {
+                        var position = new RECT((int)(short)Interop.PARAM.LOWORD(lParam), (int)(short)Interop.PARAM.HIWORD(lParam), 0, 0);
+                        var windowStyle = GetWindowStylePlacement(_options.WindowState);
+                        Interop.User32.AdjustWindowRectEx(ref position, (int)windowStyle.Styles, BOOL.FALSE, (int)windowStyle.ExStyles);
+                        HostMoved?.Invoke(this, new MovedEventArgs(position.X, position.Y));
+                        return IntPtr.Zero;
+                    }
 
-                case WM.SIZING:
                 case WM.SIZE:
                     {
-                        var size = GetClientSize();
-                        OnSizeChanged(size.Width, size.Height);
+                        var innerSize = GetClientSize();
+                        var outerSize = new RECT(0, 0, (int)(short)Interop.PARAM.LOWORD(lParam), (int)(short)Interop.PARAM.HIWORD(lParam));
+                        var windowStyle = GetWindowStylePlacement(_options.WindowState);
+                        Interop.User32.AdjustWindowRectEx(ref outerSize, (int)windowStyle.Styles, BOOL.FALSE, (int)windowStyle.ExStyles);
+                        HandleSizeChanged(innerSize.Width, innerSize.Height, outerSize.Width, outerSize.Height);
                         break;
                     }
                 case WM.GETMINMAXINFO:
@@ -586,9 +595,9 @@ namespace Chromely.NativeHost
 
         #region WndProc Methods
 
-        protected virtual void HandleSizeChanged(int width, int height)
+        protected virtual void HandleSizeChanged(int innerWidth, int innerHeight, int outerWidth, int outerHeight)
         {
-            HostSizeChanged?.Invoke(this, new SizeChangedEventArgs(width, height));
+            HostSizeChanged?.Invoke(this, new SizeChangedEventArgs(innerWidth, innerHeight, outerWidth, outerHeight));
         }
 
         private unsafe bool HandleMinMaxSizes(IntPtr lParam)
