@@ -59,5 +59,11 @@
   <ItemGroup>
     <None Include="chromely.png" Pack="true" PackagePath="" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\CefSharp\CefSharp.BrowserSubprocess\CefSharp.BrowserSubprocess.csproj" />
+    <ProjectReference Include="..\..\..\CefSharp\CefSharp.Core\CefSharp.Core.csproj" />
+    <ProjectReference Include="..\..\..\CefSharp\CefSharp\CefSharp.csproj" />
+  </ItemGroup>
   
 </Project>
