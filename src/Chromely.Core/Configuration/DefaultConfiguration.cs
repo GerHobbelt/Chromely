@@ -166,7 +166,7 @@ namespace Chromely.Core.Configuration
             if (configuration == null)
                 return null;
 
-            var configSection = configuration.GetSection(sectionName).Get(typeof(ConfiguratorSection)) as ConfiguratorSection;
+            var configSection = configuration.GetSection(sectionName) as ConfiguratorSection;
             if (configSection != null)
             {
                 var config = new DefaultConfiguration();
