@@ -5,7 +5,7 @@ using static Chromely.Interop.User32;
 
 namespace Chromely.NativeHost
 {
-    internal class DefaulKeyboadHookHandler : IKeyboadHookHandler
+    public class DefaulKeyboadHookHandler : IKeyboadHookHandler
     {
         protected IChromelyNativeHost _nativeHost;
         protected IWindowOptions _options;

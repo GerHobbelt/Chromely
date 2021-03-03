@@ -186,7 +186,6 @@ namespace Chromely.Core
                     windowController.Dispose();
                     (_serviceProvider as ServiceProvider)?.Dispose();
                 }
-
             }
             catch (Exception exception)
             {
